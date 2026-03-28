@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.devtools.ksp") version "1.9.24-1.0.20"
 }
 
 android {
@@ -13,6 +14,10 @@ android {
         targetSdk = 34
         versionCode = 15
         versionName = "1.1.9"
+
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+        }
     }
 
     buildTypes {
@@ -41,21 +46,18 @@ dependencies {
     // AndroidX
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.livedata)
 
-    // YukiHookAPI
+    // YukiHookAPI (Xposed hook 框架)
     compileOnly(libs.yukihookapi)
+    ksp(libs.yukihookapi.ksp)
 
-    // DexKit
+    // DexKit (运行时类查找)
     implementation(libs.dexkit)
 
-    // OkHttp
+    // OkHttp (网络请求 + WebDav)
     implementation(libs.okhttp)
-
-    // WebDav
-    implementation(libs.sardine)
 
     // Coroutines
     implementation(libs.coroutines)
