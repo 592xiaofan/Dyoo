@@ -2,7 +2,7 @@ package o.dyoo.hook.dexkit
 
 import com.highcapable.yukihookapi.hook.log.YLog
 import com.highcapable.yukihookapi.hook.param.PackageParam
-import io.github.libxposed.service.DexKitBridge
+import io.github.luckypray.dexkit.DexKitBridge
 
 /**
  * 抖音类查找器

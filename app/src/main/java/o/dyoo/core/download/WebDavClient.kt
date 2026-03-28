@@ -1,6 +1,6 @@
 package o.dyoo.core.download
 
-import com.github.sardine.SardineFactory
+import com.github.thegrizzlylabs.sardine.android.SardineFactory
 import com.highcapable.yukihookapi.hook.log.YLog
 import kotlinx.coroutines.*
 import o.dyoo.core.config.ModuleConfig
