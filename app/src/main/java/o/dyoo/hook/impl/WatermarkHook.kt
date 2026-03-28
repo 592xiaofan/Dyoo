@@ -6,7 +6,7 @@ import o.dyoo.core.config.ModuleConfig
 
 /**
  * 水印去除 Hook
- * 修改视频 URL 参数去除水印
+ * Hook URL 构建过程去除水印参数
  */
 object WatermarkHook {
 
@@ -14,65 +14,56 @@ object WatermarkHook {
         if (!ModuleConfig.isWatermarkRemoveEnabled) return
 
         param.apply {
-            // Hook URL 构建，修改水印参数
-            hookUrlBuilder()
+            hookUrlConstruction()
         }
     }
 
-    /**
-     * Hook URL 构建过程
-     * 抖音视频 URL 中的 watermark 参数控制水印
-     * watermark=1 有水印, watermark=0 无水印（部分版本支持）
-     * 
-     * 更可靠的策略: Hook 视频播放 URL 的请求参数
-     */
-    private fun PackageParam.hookUrlBuilder() {
+    private fun PackageParam.hookUrlConstruction() {
+        // 策略1: Hook okhttp3 Request.Builder 的 url 方法
         try {
-            // Hook okhttp3 Request.Builder.addHeader 或 url 方法
             "okhttp3.Request\$Builder".toClass().hook {
                 injectMember {
                     method {
                         name = "url"
                         paramCount = 1
                     }
-                    beforeHook {
+                    before {
                         val arg = args[0]
-                        if (arg is String && arg.contains("watermark")) {
-                            val cleanUrl = arg
+                        if (arg is String && (arg.contains("watermark") || arg.contains("wm_aid"))) {
+                            val clean = arg
                                 .replace("watermark=1", "watermark=0")
                                 .replace("wm_aid=1", "wm_aid=0")
-                            args[0] = cleanUrl
-                            YLog.info("Dyoo: Removed watermark from URL")
+                            args[0] = clean
+                            YLog.info("Dyoo: Watermark removed from URL")
                         }
                     }
                 }
             }
+            YLog.info("Dyoo: Hooked okhttp3 Request.Builder for watermark removal")
         } catch (e: Throwable) {
-            YLog.error("Dyoo: Hook URL builder failed: ${e.message}")
+            YLog.error("Dyoo: Hook watermark (okhttp) failed: ${e.message}")
         }
 
-        // 备用策略: Hook 视频播放地址中的 watermark 相关类
+        // 策略2: 如果 DexKit 找到了视频类，hook 其 String 返回值
+        val videoClassName = o.dyoo.hook.dexkit.DouyinFinder.videoUrlFieldClass ?: return
         try {
-            val wmClass = DouyinFinder.videoUrlFieldClass ?: return
-            wmClass.toClass().hook {
+            videoClassName.toClass().hook {
                 injectMember {
-                    // 所有返回 String 的方法都检查是否包含水印参数
                     allMethods {
-                        returnType == "java.lang.String"
+                        returnType == String::class.java.name
                     }
-                    afterHook {
-                        val result = this.result as? String ?: return@afterHook
-                        if (result.contains("watermark") || result.contains("wm_aid")) {
-                            val clean = result
+                    after {
+                        val str = result as? String ?: return@after
+                        if (str.contains("watermark") || str.contains("wm_aid")) {
+                            result = str
                                 .replace("watermark=1", "watermark=0")
                                 .replace("wm_aid=1", "wm_aid=0")
-                            this.result = clean
                         }
                     }
                 }
             }
         } catch (e: Throwable) {
-            YLog.error("Dyoo: Hook watermark class failed: ${e.message}")
+            YLog.error("Dyoo: Hook watermark (video class) failed: ${e.message}")
         }
     }
 }

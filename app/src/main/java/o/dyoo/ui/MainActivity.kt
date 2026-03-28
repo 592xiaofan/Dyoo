@@ -7,7 +7,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import o.dyoo.app.BuildConfig
+import o.dyoo.BuildConfig
 import o.dyoo.core.config.ModuleConfig
 import o.dyoo.databinding.ActivityMainBinding
 
