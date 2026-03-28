@@ -53,9 +53,6 @@ dependencies {
     compileOnly(libs.yukihookapi)
     ksp(libs.yukihookapi.ksp)
 
-    // DexKit (运行时类查找)
-    implementation(libs.dexkit)
-
     // OkHttp (网络请求 + WebDav)
     implementation(libs.okhttp)
 
