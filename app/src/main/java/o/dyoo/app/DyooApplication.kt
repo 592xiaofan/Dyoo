@@ -1,7 +1,6 @@
 package o.dyoo.app
 
 import android.app.Application
-import com.highcapable.yukihookapi.hook.log.YLogConfig
 
 /**
  * Dyoo Application
@@ -17,6 +16,5 @@ class DyooApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        YLogConfig.isEnable = BuildConfig.DEBUG
     }
 }

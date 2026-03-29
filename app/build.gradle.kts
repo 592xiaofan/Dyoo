@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("com.google.devtools.ksp") version "1.9.24-1.0.20"
+    id("com.google.devtools.ksp") version "2.0.0-1.0.22"
 }
 
 android {
@@ -51,7 +51,7 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.8.2")
 
     // YukiHookAPI (Xposed hook 框架)
-    compileOnly(libs.yukihookapi)
+    implementation(libs.yukihookapi)
     ksp(libs.yukihookapi.ksp)
 
     // OkHttp (网络请求 + WebDav)
