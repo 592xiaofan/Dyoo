@@ -3,7 +3,7 @@ package o.dyoo.hook
 import com.highcapable.yukihookapi.annotation.xposed.InjectYukiHookWithXposed
 import com.highcapable.yukihookapi.hook.log.YLog
 import com.highcapable.yukihookapi.hook.param.PackageParam
-import com.highcapable.yukihookapi.hook.xposed.proxy.IYukiHookXposedInit
+import com.highcapable.yukihookapi.hook.xposed.proxy.YukiHookXposedInitProxy
 import o.dyoo.hook.dexkit.DouyinFinder
 import o.dyoo.hook.impl.VideoHook
 import o.dyoo.hook.impl.ImageHook
@@ -14,7 +14,7 @@ import o.dyoo.hook.impl.PopupHook
  * Dyoo Xposed 入口
  */
 @InjectYukiHookWithXposed
-class HookEntry : IYukiHookXposedInit {
+class HookEntry : YukiHookXposedInitProxy {
 
     override fun onHook(param: PackageParam) {
         param.apply {
