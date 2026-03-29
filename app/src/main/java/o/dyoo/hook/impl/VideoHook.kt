@@ -11,7 +11,6 @@ import o.dyoo.core.download.Downloader
 
 /**
  * 视频下载 Hook
- * 通过 DexKit 搜索 + 反射拦截抖音视频 URL
  */
 object VideoHook {
 
@@ -21,72 +20,56 @@ object VideoHook {
         if (!ModuleConfig.isVideoDownloadEnabled) return
 
         param.apply {
-            hookVideoUrlField()
             hookDownloadManager()
         }
     }
 
-    /**
-     * Hook 视频数据模型类的 URL 获取
-     * 抖音视频播放地址通过 play_addr 字段暴露
-     * 我们拦截所有返回 List<String> 的方法来捕获 URL
-     */
-    private fun PackageParam.hookVideoUrlField() {
-        val videoClassName = o.dyoo.hook.dexkit.DouyinFinder.videoUrlFieldClass ?: return
-
-        try {
-            // Hook 所有返回 java.util.List 的方法
-            videoClassName.toClass().hook {
-                injectMember {
-                    allMethods {
-                        returnType == List::class.java.name
-                    }
-                    after {
-                        val list = result as? List<*>
-                        if (list != null) {
-                            for (item in list) {
-                                val str = item as? String ?: continue
-                                if (str.startsWith("http") && str.contains("douyin")) {
-                                    lastVideoUrl = str
-                                    YLog.info("Dyoo: Captured video URL from model")
-                                    break
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            YLog.info("Dyoo: Hooked video model class: $videoClassName")
-        } catch (e: Throwable) {
-            YLog.error("Dyoo: Hook video model failed: ${e.message}")
-        }
-    }
-
-    /**
-     * Hook 系统 DownloadManager
-     * 抖音可能使用系统下载器来缓存视频
-     */
     private fun PackageParam.hookDownloadManager() {
         try {
-            android.app.DownloadManager::class.java.hook {
-                injectMember {
-                    method { name = "enqueue" }
-                    before {
+            android.app.DownloadManager::class.java.method {
+                name = "enqueue"
+            }.hook {
+                before {
+                    try {
+                        val request = args[0]
+                        val uriField = request.javaClass.getDeclaredField("mUri")
+                        uriField.isAccessible = true
+                        val uri = uriField.get(request) as? String
+                        if (!uri.isNullOrEmpty() && uri.startsWith("http")) {
+                            lastVideoUrl = uri
+                            YLog.info("Dyoo: Captured URL: $uri")
+                        }
+                    } catch (_: Throwable) {}
+                }
+            }
+            YLog.info("Dyoo: DownloadManager hook installed")
+        } catch (e: Throwable) {
+            YLog.error("Dyoo: Hook DownloadManager failed: ${e.message}")
+        }
+
+        // Hook OkHttpClient 以捕获视频请求
+        try {
+            "okhttp3.RealCall".toClass().method {
+                name = "execute"
+            }.hook {
+                after {
+                    val response = result
+                    if (response != null) {
                         try {
-                            val request = args[0]
-                            val uriField = request.javaClass.getDeclaredField("mUri")
-                            uriField.isAccessible = true
-                            val uri = uriField.get(request) as? String
-                            if (!uri.isNullOrEmpty() && uri.startsWith("http")) {
-                                lastVideoUrl = uri
-                                YLog.info("Dyoo: Captured URL from DownloadManager: $uri")
+                            val requestField = response.javaClass.getDeclaredMethod("request")
+                            val request = requestField.invoke(response)
+                            val urlMethod = request.javaClass.getDeclaredMethod("url")
+                            val url = urlMethod.invoke(request).toString()
+                            if (url.contains("douyin") && (url.contains("video") || url.contains("play"))) {
+                                lastVideoUrl = url
+                                YLog.info("Dyoo: Captured video URL: $url")
                             }
                         } catch (_: Throwable) {}
                     }
                 }
             }
         } catch (e: Throwable) {
-            YLog.error("Dyoo: Hook DownloadManager failed: ${e.message}")
+            YLog.error("Dyoo: Hook OkHttpClient failed: ${e.message}")
         }
     }
 

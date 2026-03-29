@@ -8,7 +8,6 @@ import o.dyoo.core.download.Downloader
 
 /**
  * 图片下载 Hook
- * Hook ImageView 的 setImageURI 来捕获图片 URL
  */
 object ImageHook {
 
@@ -18,18 +17,11 @@ object ImageHook {
         if (!ModuleConfig.isImageDownloadEnabled) return
 
         param.apply {
-            hookImageView()
-        }
-    }
-
-    private fun PackageParam.hookImageView() {
-        try {
-            android.widget.ImageView::class.java.hook {
-                injectMember {
-                    method {
-                        name = "setImageURI"
-                        paramCount = 1
-                    }
+            try {
+                android.widget.ImageView::class.java.method {
+                    name = "setImageURI"
+                    paramCount = 1
+                }.hook {
                     before {
                         val uri = args[0] as? android.net.Uri
                         val url = uri?.toString()
@@ -39,9 +31,9 @@ object ImageHook {
                         }
                     }
                 }
+            } catch (e: Throwable) {
+                YLog.error("Dyoo: Hook ImageView failed: ${e.message}")
             }
-        } catch (e: Throwable) {
-            YLog.error("Dyoo: Hook ImageView failed: ${e.message}")
         }
     }
 

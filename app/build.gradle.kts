@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.livedata)
+    implementation("androidx.activity:activity-ktx:1.8.2")
 
     // YukiHookAPI (Xposed hook 框架)
     compileOnly(libs.yukihookapi)

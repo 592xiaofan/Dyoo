@@ -8,7 +8,6 @@ import o.dyoo.core.ui.FloatingView
 
 /**
  * 悬浮窗 Hook
- * Hook Activity 生命周期，在抖音界面显示悬浮按钮
  */
 object PopupHook {
 
@@ -16,10 +15,10 @@ object PopupHook {
         if (!ModuleConfig.showFloatingButton) return
 
         param.apply {
-            // Hook onResume
-            Activity::class.java.hook {
-                injectMember {
-                    method { name = "onResume" }
+            try {
+                Activity::class.java.method {
+                    name = "onResume"
+                }.hook {
                     after {
                         val activity = instance as? Activity ?: return@after
                         if (activity.packageName == "com.ss.android.ugc.aweme") {
@@ -27,12 +26,10 @@ object PopupHook {
                         }
                     }
                 }
-            }
 
-            // Hook onPause
-            Activity::class.java.hook {
-                injectMember {
-                    method { name = "onPause" }
+                Activity::class.java.method {
+                    name = "onPause"
+                }.hook {
                     before {
                         val activity = instance as? Activity ?: return@before
                         if (activity.packageName == "com.ss.android.ugc.aweme") {
@@ -40,9 +37,11 @@ object PopupHook {
                         }
                     }
                 }
-            }
 
-            YLog.info("Dyoo: PopupHook installed")
+                YLog.info("Dyoo: PopupHook installed")
+            } catch (e: Throwable) {
+                YLog.error("Dyoo: PopupHook failed: ${e.message}")
+            }
         }
     }
 }
