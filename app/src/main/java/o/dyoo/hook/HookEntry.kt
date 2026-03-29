@@ -23,11 +23,11 @@ class HookEntry : IYukiHookXposedInit {
     }
 
     override fun onXposedEvent() {
-        YukiHookAPI.initiate { hostApp ->
-            hostApp.loadApp(name = "com.ss.android.ugc.aweme") {
+        YukiHookAPI.initiate { app ->
+            app.loadApp(name = "com.ss.android.ugc.aweme") {
                 YLog.info("Dyoo: Hooking Douyin...")
 
-                DouyinFinder.init(this@loadApp)
+                DouyinFinder.init(this)
 
                 VideoHook.setup(this)
                 ImageHook.setup(this)
