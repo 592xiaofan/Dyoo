@@ -6,7 +6,6 @@ import o.dyoo.core.config.ModuleConfig
 import o.dyoo.core.download.Downloader
 
 object ImageHook {
-
     var lastImageUrl: String? = null
 
     fun setup(param: PackageParam) {
@@ -14,15 +13,11 @@ object ImageHook {
         param.apply {
             android.widget.ImageView::class.java.hook {
                 injectMember {
-                    method {
-                        name = "setImageURI"
-                        paramCount = 1
-                    }
-                    beforeUnit {
-                        val uri = args(0) as? android.net.Uri
-                        val url = uri?.toString()
-                        if (!url.isNullOrEmpty() && url.startsWith("http")) {
-                            lastImageUrl = url
+                    method { name = "setImageURI"; paramCount = 1 }
+                    beforeHook {
+                        val uri = args[0] as? android.net.Uri
+                        uri?.toString()?.let { url ->
+                            if (url.startsWith("http")) lastImageUrl = url
                         }
                     }
                 }
@@ -31,11 +26,7 @@ object ImageHook {
     }
 
     fun saveCurrentImage(context: android.content.Context) {
-        val url = lastImageUrl
-        if (url.isNullOrEmpty()) {
-            Toast.makeText(context, "未捕获到图片链接", Toast.LENGTH_SHORT).show()
-            return
-        }
-        Downloader.downloadImage(url, context)
+        lastImageUrl?.let { Downloader.downloadImage(it, context) }
+            ?: Toast.makeText(context, "未捕获到图片链接", Toast.LENGTH_SHORT).show()
     }
 }
