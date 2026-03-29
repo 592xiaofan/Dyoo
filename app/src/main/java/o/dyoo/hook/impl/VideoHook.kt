@@ -51,8 +51,8 @@ object VideoHook {
                 after {
                     val response = result ?: return@after
                     try {
-                        val requestMethod = response.javaClass.getDeclaredMethod("request")
-                        val request = requestMethod.invoke(response) ?: return@after
+                        val requestMethod = response!!.javaClass.getDeclaredMethod("request")
+                        val request = requestMethod.invoke(response!!) ?: return@after
                         val urlMethod = request.javaClass.getDeclaredMethod("url")
                         val url = urlMethod.invoke(request)?.toString() ?: return@after
                         if (url.contains("douyin") && (url.contains("video") || url.contains("play"))) {

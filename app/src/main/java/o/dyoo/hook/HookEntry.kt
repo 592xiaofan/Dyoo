@@ -1,8 +1,8 @@
 package o.dyoo.hook
 
+import com.highcapable.yukihookapi.YukiHookAPI
 import com.highcapable.yukihookapi.annotation.xposed.InjectYukiHookWithXposed
 import com.highcapable.yukihookapi.hook.log.YLog
-import com.highcapable.yukihookapi.hook.param.PackageParam
 import com.highcapable.yukihookapi.hook.xposed.proxy.IYukiHookXposedInit
 import o.dyoo.hook.dexkit.DouyinFinder
 import o.dyoo.hook.impl.VideoHook
@@ -16,9 +16,15 @@ import o.dyoo.hook.impl.PopupHook
 @InjectYukiHookWithXposed
 class HookEntry : IYukiHookXposedInit {
 
-    override fun onHook(param: PackageParam) {
-        param.apply {
-            loadApp(name = "com.ss.android.ugc.aweme") {
+    override fun onInit() {
+        YukiHookAPI.configs {
+            isDebug = true
+        }
+    }
+
+    override fun onXposedEvent() {
+        YukiHookAPI.initiate { hostApp ->
+            hostApp.loadApp(name = "com.ss.android.ugc.aweme") {
                 YLog.info("Dyoo: Hooking Douyin...")
 
                 DouyinFinder.init(this@loadApp)
