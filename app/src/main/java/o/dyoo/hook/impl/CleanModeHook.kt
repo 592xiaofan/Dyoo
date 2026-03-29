@@ -1,145 +1,218 @@
 package o.dyoo.hook.impl
 
 import android.app.Activity
+import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
-import android.view.MotionEvent
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
 import com.highcapable.yukihookapi.hook.param.PackageParam
 import o.dyoo.core.config.ModuleConfig
 
 /**
- * 清爽模式 - 播放时隐藏所有 UI 组件，暂停时显示
+ * 清爽模式 Hook
+ *
+ * 策略：
+ * 1. Hook MediaPlayer.start() - 检测视频播放状态 (稳定 Android API)
+ * 2. Hook MediaPlayer.pause() - 检测视频暂停
+ * 3. Hook MediaPlayer.stop() - 检测视频停止
+ * 4. 遍历视图树，隐藏/显示非视频 UI 组件
+ * 5. 触摸屏幕时临时显示 UI 3 秒
+ *
+ * 全部基于 Android 稳定 API，不依赖任何混淆类名
  */
 object CleanModeHook {
+    private const val TAG = "Dyoo.CleanMode"
     private val handler = Handler(Looper.getMainLooper())
-    private val hideRunnable = Runnable { hideAllUI() }
     private var isCleanMode = false
-    private var lastPlayState = false // false=暂停, true=播放
+    private var isPlaying = false
+    private var lastActivity: Activity? = null
+
+    /** 临时显示 UI 后自动隐藏的 Runnable */
+    private val autoHideRunnable = Runnable {
+        if (isCleanMode && isPlaying) {
+            hideAllUI()
+        }
+    }
 
     fun setup(param: PackageParam) {
         if (!ModuleConfig.isCleanModeEnabled) return
+        Log.i(TAG, "初始化清爽模式 Hook")
         param.apply {
-            // Hook 抖音主 Activity 的触摸事件
+            hookMediaPlayer()
+            hookActivityLifecycle()
+        }
+    }
+
+    /**
+     * Hook MediaPlayer 播放状态 - 稳定 Android API
+     * start() = 播放 → 隐藏 UI
+     * pause()/stop() = 暂停/停止 → 显示 UI
+     */
+    private fun PackageParam.hookMediaPlayer() {
+        try {
+            MediaPlayer::class.java.hook {
+                injectMember {
+                    method { name = "start" }
+                    afterHook {
+                        if (!isCleanMode) return@afterHook
+                        isPlaying = true
+                        Log.d(TAG, "视频开始播放 - 隐藏 UI")
+                        hideAllUI()
+                    }
+                }
+            }
+            MediaPlayer::class.java.hook {
+                injectMember {
+                    method { name = "pause" }
+                    afterHook {
+                        isPlaying = false
+                        Log.d(TAG, "视频暂停 - 显示 UI")
+                        showAllUI()
+                    }
+                }
+            }
+            MediaPlayer::class.java.hook {
+                injectMember {
+                    method { name = "stop" }
+                    afterHook {
+                        isPlaying = false
+                        Log.d(TAG, "视频停止 - 显示 UI")
+                        showAllUI()
+                    }
+                }
+            }
+            Log.i(TAG, "MediaPlayer hook 成功")
+        } catch (e: Throwable) {
+            Log.e(TAG, "MediaPlayer hook 失败: ${e.message}")
+        }
+    }
+
+    /**
+     * Hook Activity 生命周期
+     * - onCreate: 设置触摸监听
+     * - onDestroy: 清理状态
+     */
+    private fun PackageParam.hookActivityLifecycle() {
+        try {
             Activity::class.java.hook {
                 injectMember {
-                    method {
-                        name = "onCreate"
-                        paramCount = 1
-                    }
+                    method { name = "onCreate"; paramCount = 1 }
                     afterHook {
                         val activity = instance as? Activity ?: return@afterHook
                         if (activity.packageName != "com.ss.android.ugc.aweme") return@afterHook
+                        lastActivity = activity
+                        isCleanMode = true
                         setupTouchListener(activity)
+                        Log.d(TAG, "Activity 创建: ${activity.javaClass.simpleName}")
                     }
                 }
             }
+            Log.i(TAG, "Activity 生命周期 hook 成功")
+        } catch (e: Throwable) {
+            Log.e(TAG, "Activity hook 失败: ${e.message}")
         }
     }
 
     /**
-     * 在主界面设置触摸监听，通过定时器模拟播放/暂停切换
-     * 播放时隐藏所有非视频 UI，暂停时显示
+     * 设置触摸监听
+     * 清爽模式下：触摸屏幕 → 显示 UI 3 秒 → 自动隐藏
      */
     private fun setupTouchListener(activity: Activity) {
-        val decorView = activity.window?.decorView ?: return
-        decorView.setOnTouchListener { _, event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                if (isCleanMode) {
-                    // 清爽模式下触摸 → 显示 UI 3 秒
-                    showAllUI()
-                    handler.removeCallbacks(hideRunnable)
-                    handler.postDelayed(hideRunnable, 3000)
+        try {
+            val decorView = activity.window?.decorView ?: return
+            decorView.setOnTouchListener { _, event ->
+                if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                    if (isCleanMode && isPlaying) {
+                        Log.d(TAG, "触摸屏幕 - 临时显示 UI 3 秒")
+                        showAllUI()
+                        handler.removeCallbacks(autoHideRunnable)
+                        handler.postDelayed(autoHideRunnable, 3000)
+                    }
                 }
+                false // 不拦截事件
             }
-            false // 不拦截
+        } catch (e: Throwable) {
+            Log.e(TAG, "设置触摸监听失败: ${e.message}")
         }
     }
 
     /**
-     * 启动清爽模式 - 隐藏所有 UI 组件
+     * 启动清爽模式
      */
-    fun activateCleanMode() {
+    fun activate() {
         isCleanMode = true
-        hideAllUI()
+        Log.i(TAG, "清爽模式已激活")
+        if (isPlaying) hideAllUI()
     }
 
     /**
-     * 停止清爽模式 - 显示所有 UI 组件
+     * 停止清爽模式
      */
-    fun deactivateCleanMode() {
+    fun deactivate() {
         isCleanMode = false
-        handler.removeCallbacks(hideRunnable)
+        isPlaying = false
+        handler.removeCallbacks(autoHideRunnable)
         showAllUI()
+        Log.i(TAG, "清爽模式已关闭")
     }
 
+    /**
+     * 隐藏所有非视频 UI 组件
+     */
     private fun hideAllUI() {
-        isCleanMode = true
-        // 通过遍历窗口隐藏非视频元素
         try {
-            val activity = currentActivity() ?: return
+            val activity = lastActivity ?: return
             val root = activity.window?.decorView as? ViewGroup ?: return
-            applyCleanMode(root, true)
-        } catch (_: Throwable) {}
+            applyVisibility(root, View.INVISIBLE)
+        } catch (e: Throwable) {
+            Log.e(TAG, "隐藏 UI 失败: ${e.message}")
+        }
     }
 
+    /**
+     * 显示所有 UI 组件
+     */
     private fun showAllUI() {
         try {
-            val activity = currentActivity() ?: return
+            val activity = lastActivity ?: return
             val root = activity.window?.decorView as? ViewGroup ?: return
-            applyCleanMode(root, false)
-        } catch (_: Throwable) {}
+            applyVisibility(root, View.VISIBLE)
+        } catch (e: Throwable) {
+            Log.e(TAG, "显示 UI 失败: ${e.message}")
+        }
     }
 
     /**
-     * 遍历视图树，隐藏/显示非视频组件
-     * 视频组件通常 ID 包含 "video"，其他 UI 一律处理
+     * 遍历视图树，设置非视频组件的可见性
+     *
+     * 判断逻辑：
+     * - ID 包含 video/player/surface/texture → 跳过（视频播放器）
+     * - 其他所有组件 → 设置可见性
      */
-    private fun applyCleanMode(view: View, hide: Boolean) {
+    private fun applyVisibility(view: View, visibility: Int) {
         if (view is ViewGroup) {
             for (i in 0 until view.childCount) {
                 val child = view.getChildAt(i) ?: continue
-                applyCleanMode(child, hide)
+                applyVisibility(child, visibility)
             }
         }
-        // 根据 ID 名称判断是否为视频播放器
-        val idName = try {
-            view.resources?.getResourceEntryName(view.id) ?: ""
-        } catch (_: Throwable) { "" }
 
-        // 需要隐藏的组件关键字
-        val shouldHide = listOf(
-            "user", "nick", "name", "desc", "author",  // 用户信息
-            "like", "heart", "favorite",                // 点赞
-            "comment",                                  // 评论
-            "share",                                    // 分享
-            "caption", "subtitle",                      // 字幕
-            "tag", "hash",                              // 标签
-            "music", "music_icon",                      // 音乐
-            "progress", "seekbar",                      // 进度条
-            "action", "button", "icon",                 // 操作按钮
-            "bottom", "tab",                            // 底部导航
-            "feed_container", "recycler_view"           // 容器
-        )
+        try {
+            val idName = view.resources?.getResourceEntryName(view.id) ?: ""
+            val isVideoPlayer = idName.contains("video") ||
+                    idName.contains("player") ||
+                    idName.contains("surface") ||
+                    idName.contains("texture")
 
-        // 视频播放器区域（不隐藏）
-        val isVideoPlayer = idName.contains("video") ||
-                idName.contains("player") ||
-                idName.contains("surface") ||
-                idName.contains("texture")
-
-        if (!isVideoPlayer && shouldHide.any { idName.contains(it) }) {
-            view.visibility = if (hide) View.INVISIBLE else View.VISIBLE
+            if (!isVideoPlayer) {
+                view.visibility = visibility
+            }
+        } catch (_: Throwable) {
+            // 无 ID 的视图也隐藏/显示
+            view.visibility = visibility
         }
-    }
-
-    private fun currentActivity(): Activity? {
-        // 通过反射获取当前 Activity
-        return try {
-            val activityThread = Class.forName("android.app.ActivityThread")
-            val method = activityThread.getMethod("currentActivity")
-            method.invoke(null) as? Activity
-        } catch (_: Throwable) { null }
     }
 }
