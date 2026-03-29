@@ -53,6 +53,7 @@ dependencies {
     // YukiHookAPI (Xposed hook 框架)
     implementation(libs.yukihookapi)
     ksp(libs.yukihookapi.ksp)
+    compileOnly("de.robv.android.xposed:api:82")
 
     // OkHttp (网络请求 + WebDav)
     implementation(libs.okhttp)
