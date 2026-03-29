@@ -1,7 +1,7 @@
 package o.dyoo.hook.impl
 
 import android.app.Activity
-import com.highcapable.yukihookapi.hook.log.YLog
+import com.highcapable.yukihookapi.hook.factory.method
 import com.highcapable.yukihookapi.hook.param.PackageParam
 import o.dyoo.core.config.ModuleConfig
 import o.dyoo.core.ui.FloatingView
@@ -37,11 +37,7 @@ object PopupHook {
                         }
                     }
                 }
-
-                YLog.info("Dyoo: PopupHook installed")
-            } catch (e: Throwable) {
-                YLog.error("Dyoo: PopupHook failed: ${e.message}")
-            }
+            } catch (_: Throwable) {}
         }
     }
 }

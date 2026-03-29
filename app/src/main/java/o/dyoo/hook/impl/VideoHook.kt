@@ -4,7 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
-import com.highcapable.yukihookapi.hook.log.YLog
+import com.highcapable.yukihookapi.hook.factory.method
 import com.highcapable.yukihookapi.hook.param.PackageParam
 import o.dyoo.core.config.ModuleConfig
 import o.dyoo.core.download.Downloader
@@ -28,6 +28,7 @@ object VideoHook {
         try {
             android.app.DownloadManager::class.java.method {
                 name = "enqueue"
+                paramCount = 1
             }.hook {
                 before {
                     try {
@@ -37,40 +38,30 @@ object VideoHook {
                         val uri = uriField.get(request) as? String
                         if (!uri.isNullOrEmpty() && uri.startsWith("http")) {
                             lastVideoUrl = uri
-                            YLog.info("Dyoo: Captured URL: $uri")
                         }
                     } catch (_: Throwable) {}
                 }
             }
-            YLog.info("Dyoo: DownloadManager hook installed")
-        } catch (e: Throwable) {
-            YLog.error("Dyoo: Hook DownloadManager failed: ${e.message}")
-        }
+        } catch (_: Throwable) {}
 
-        // Hook OkHttpClient 以捕获视频请求
         try {
-            "okhttp3.RealCall".toClass().method {
+            Class.forName("okhttp3.RealCall").method {
                 name = "execute"
             }.hook {
                 after {
-                    val response = result
-                    if (response != null) {
-                        try {
-                            val requestField = response.javaClass.getDeclaredMethod("request")
-                            val request = requestField.invoke(response)
-                            val urlMethod = request.javaClass.getDeclaredMethod("url")
-                            val url = urlMethod.invoke(request).toString()
-                            if (url.contains("douyin") && (url.contains("video") || url.contains("play"))) {
-                                lastVideoUrl = url
-                                YLog.info("Dyoo: Captured video URL: $url")
-                            }
-                        } catch (_: Throwable) {}
-                    }
+                    try {
+                        val response = result ?: return@after
+                        val requestMethod = response.javaClass.getDeclaredMethod("request")
+                        val request = requestMethod.invoke(response)
+                        val urlMethod = request.javaClass.getDeclaredMethod("url")
+                        val url = urlMethod.invoke(request).toString()
+                        if (url.contains("douyin") && (url.contains("video") || url.contains("play"))) {
+                            lastVideoUrl = url
+                        }
+                    } catch (_: Throwable) {}
                 }
             }
-        } catch (e: Throwable) {
-            YLog.error("Dyoo: Hook OkHttpClient failed: ${e.message}")
-        }
+        } catch (_: Throwable) {}
     }
 
     fun downloadCurrentVideo(context: Context) {

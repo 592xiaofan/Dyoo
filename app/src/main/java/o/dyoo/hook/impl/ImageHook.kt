@@ -1,7 +1,7 @@
 package o.dyoo.hook.impl
 
 import android.widget.Toast
-import com.highcapable.yukihookapi.hook.log.YLog
+import com.highcapable.yukihookapi.hook.factory.method
 import com.highcapable.yukihookapi.hook.param.PackageParam
 import o.dyoo.core.config.ModuleConfig
 import o.dyoo.core.download.Downloader
@@ -27,13 +27,10 @@ object ImageHook {
                         val url = uri?.toString()
                         if (!url.isNullOrEmpty() && url.startsWith("http")) {
                             lastImageUrl = url
-                            YLog.info("Dyoo: Captured image URL: $url")
                         }
                     }
                 }
-            } catch (e: Throwable) {
-                YLog.error("Dyoo: Hook ImageView failed: ${e.message}")
-            }
+            } catch (_: Throwable) {}
         }
     }
 
