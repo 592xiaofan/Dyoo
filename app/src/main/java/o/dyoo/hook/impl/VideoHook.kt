@@ -40,7 +40,7 @@ object VideoHook {
                     method { name = "enqueue" }
                     beforeHook {
                         try {
-                            val request = args[0] ?: return@BeforeHook
+                            val request = args[0] ?: return@beforeHook
                             val uriField = request.javaClass.getDeclaredField("mUri")
                             uriField.isAccessible = true
                             val uri = uriField.get(request) as? String
