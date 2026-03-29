@@ -4,7 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
-import com.highcapable.yukihookapi.hook.log.YukiHookLogger
+import android.util.Log
 import com.highcapable.yukihookapi.hook.param.PackageParam
 import o.dyoo.core.config.ModuleConfig
 import o.dyoo.core.download.Downloader
@@ -24,7 +24,7 @@ object VideoHook {
                     method { name = "enqueue" }
                     beforeHook {
                         try {
-                            val request = args[0]
+                            val request = args[0] ?: return@BeforeHook
                             val uriField = request.javaClass.getDeclaredField("mUri")
                             uriField.isAccessible = true
                             val uri = uriField.get(request) as? String
@@ -34,7 +34,7 @@ object VideoHook {
                 }
             }
         } catch (e: Throwable) {
-            YukiHookLogger.error("Dyoo: Hook DownloadManager failed: ${e.message}")
+            Log.e("Dyoo", "Hook DownloadManager failed: ${e.message}")
         }
     }
 
