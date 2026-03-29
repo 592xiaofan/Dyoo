@@ -83,6 +83,11 @@ object ModuleConfig {
         get() = prefs.getInt("download_quality", 0)
         set(v) = prefs.edit().putInt("download_quality", v).apply()
 
+    // 清爽模式
+    var isCleanModeEnabled: Boolean
+        get() = prefs.getBoolean("clean_mode", false)
+        set(v) = prefs.edit().putBoolean("clean_mode", v).apply()
+
     // 定时退出（分钟，0=关闭）
     var autoExitMinutes: Int
         get() = prefs.getInt("auto_exit", 0)

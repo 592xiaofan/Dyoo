@@ -34,6 +34,9 @@ class ModuleViewModel : ViewModel() {
     private val _downloadQuality = MutableLiveData(ModuleConfig.downloadQuality)
     val downloadQuality: LiveData<Int> = _downloadQuality
 
+    private val _cleanMode = MutableLiveData(ModuleConfig.isCleanModeEnabled)
+    val cleanMode: LiveData<Boolean> = _cleanMode
+
     private val _autoExitMinutes = MutableLiveData(ModuleConfig.autoExitMinutes)
     val autoExitMinutes: LiveData<Int> = _autoExitMinutes
 
@@ -42,6 +45,7 @@ class ModuleViewModel : ViewModel() {
     fun setWatermarkRemove(v: Boolean) { ModuleConfig.isWatermarkRemoveEnabled = v; _watermarkRemove.value = v }
     fun setWebDavEnabled(v: Boolean) { ModuleConfig.isWebDavEnabled = v; _webDavEnabled.value = v }
     fun setFloatingButton(v: Boolean) { ModuleConfig.showFloatingButton = v; _floatingButton.value = v }
+    fun setCleanMode(v: Boolean) { ModuleConfig.isCleanModeEnabled = v; _cleanMode.value = v }
     fun setDownloadQuality(v: Int) { ModuleConfig.downloadQuality = v; _downloadQuality.value = v }
     fun setAutoExitMinutes(v: Int) { ModuleConfig.autoExitMinutes = v; _autoExitMinutes.value = v }
 

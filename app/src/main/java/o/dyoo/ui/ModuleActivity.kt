@@ -31,6 +31,7 @@ class ModuleActivity : AppCompatActivity() {
 
     private fun setupViews() {
         b.switchFloating.setOnCheckedChangeListener { _, checked -> vm.setFloatingButton(checked) }
+        b.switchCleanMode.setOnCheckedChangeListener { _, checked -> vm.setCleanMode(checked) }
 
         b.rbQualityHigh.setOnClickListener { vm.setDownloadQuality(0) }
         b.rbQualityLow.setOnClickListener { vm.setDownloadQuality(1) }
@@ -57,6 +58,7 @@ class ModuleActivity : AppCompatActivity() {
 
     private fun observeState() {
         vm.floatingButton.observe(this) { b.switchFloating.isChecked = it }
+        vm.cleanMode.observe(this) { b.switchCleanMode.isChecked = it }
         vm.downloadQuality.observe(this) { quality ->
             b.rbQualityHigh.isChecked = quality == 0
             b.rbQualityLow.isChecked = quality == 1
