@@ -16,7 +16,7 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import com.highcapable.yukihookapi.hook.log.YLog
+import android.util.Log
 import o.dyoo.core.config.ModuleConfig
 import o.dyoo.core.download.Downloader
 import o.dyoo.hook.impl.VideoHook
@@ -51,7 +51,7 @@ object FloatingView {
             isShowing = true
 
         } catch (e: Throwable) {
-            YLog.error("Dyoo: Show floating view failed: ${e.message}")
+            Log.e("Dyoo", "Dyoo: Show floating view failed: ${e.message}")
         }
     }
 
@@ -197,7 +197,7 @@ object FloatingView {
             panelView = panel
             isPanelShowing = true
         } catch (e: Throwable) {
-            YLog.error("Dyoo: Show panel failed: ${e.message}")
+            Log.e("Dyoo", "Dyoo: Show panel failed: ${e.message}")
         }
     }
 

@@ -6,7 +6,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
-import com.highcapable.yukihookapi.hook.log.YLog
+import android.util.Log
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -79,7 +79,7 @@ object Downloader {
                 }
 
             } catch (e: Throwable) {
-                YLog.error("Dyoo download video failed: ${e.message}")
+                Log.e("Dyoo", "Dyoo download video failed: ${e.message}")
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "下载失败: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -131,7 +131,7 @@ object Downloader {
                 }
 
             } catch (e: Throwable) {
-                YLog.error("Dyoo download image failed: ${e.message}")
+                Log.e("Dyoo", "Dyoo download image failed: ${e.message}")
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "保存失败: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -169,6 +169,6 @@ object Downloader {
             context.contentResolver.update(uri, values, null, null)
         }
 
-        YLog.info("Dyoo: Saved to MediaStore: $fileName")
+        Log.i("Dyoo", "Dyoo: Saved to MediaStore: $fileName")
     }
 }

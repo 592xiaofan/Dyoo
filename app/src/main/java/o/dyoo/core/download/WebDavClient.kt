@@ -1,6 +1,6 @@
 package o.dyoo.core.download
 
-import com.highcapable.yukihookapi.hook.log.YLog
+import android.util.Log
 import kotlinx.coroutines.*
 import okhttp3.Credentials
 import okhttp3.MediaType.Companion.toMediaType
@@ -68,14 +68,14 @@ object WebDavClient {
                 response.close()
 
                 if (success) {
-                    YLog.info("Dyoo WebDav: Uploaded ${file.name}")
+                    Log.i("Dyoo", "Dyoo WebDav: Uploaded ${file.name}")
                     withContext(Dispatchers.Main) { callback?.invoke(true, "上传成功") }
                 } else {
                     throw Exception("HTTP ${response.code}")
                 }
 
             } catch (e: Throwable) {
-                YLog.error("Dyoo WebDav: Upload failed: ${e.message}")
+                Log.e("Dyoo", "Dyoo WebDav: Upload failed: ${e.message}")
                 withContext(Dispatchers.Main) { callback?.invoke(false, "上传失败: ${e.message}") }
             }
         }
