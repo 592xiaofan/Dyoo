@@ -1,10 +1,10 @@
 [versions]
 agp = "8.2.2"
-kotlin = "2.0.0"
+kotlin = "1.9.24"
 appcompat = "1.6.1"
 material = "1.11.0"
 lifecycle = "2.7.0"
-yukihookapi = "1.2.1"
+yukihookapi = "1.1.5"
 okhttp = "4.12.0"
 coroutines = "1.7.3"
 
