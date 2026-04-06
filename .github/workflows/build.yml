@@ -1,8 +1,7 @@
 name: Build Dyoo APK
 
 on:
-  push:
-    branches: [ master, main ]
+
   workflow_dispatch:
 
 jobs:
