@@ -11,7 +11,7 @@ import o.dyoo.hook.impl.PopupHook
 import o.dyoo.hook.impl.CleanModeHook
 
 @InjectYukiHookWithXposed
-class HookEntry : IYukiHookXposedInit {
+object HookEntry : IYukiHookXposedInit {
 
     override fun onHook() {
         encase {
